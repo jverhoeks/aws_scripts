@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# GET default from environment
+region=${AWS_REGION}
+profile=${AWS_PROFILE}
+
+usage () {
+echo "$0 -i <instance_id> [-r <region>] [-p <awsprofile>]";
+echo "  or set env AWS_REGION and AWS_PROFILE"
+}
+
+while getopts "r:p:i:" opt; do
+  case $opt in
+    r)
+      region=$OPTARG
+      ;;
+    i)
+        instance=$OPTARG
+      ;;
+    p)
+      profile=$OPTARG
+      ;;
+    h)
+      usage;
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      ;;
+  esac
+done
+
+if [ -z "${instance}" ]; then
+    echo "No instance given"
+    usage;
+    exit 1
+fi
+
+if ! which aws >/dev/null; then
+    echo "aws cli missing" >&2
+fi
+
+
+aws ec2 get-console-output --instance-id  "${instance}" --region "${region}" --profile "${profile}" | jq -r .Output | sed 's/\\n/\n/g'
